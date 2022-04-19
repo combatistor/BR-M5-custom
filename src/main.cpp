@@ -434,6 +434,7 @@ void setup()
 
     M5.begin();
     current_shooting_mode = Shooting_remote;
+    // current_shooting_mode = Shooting_timelapse;
     current_page = Shooting;
 
     int do_pair = M5.BtnA.isPressed() ? 1 : 0;
@@ -463,7 +464,7 @@ void setup()
         } while (!canon_ble.pair(10));
 
         blinker.detach();
-        digitalWrite(LED_PORT, HIGH);
+        digitalWrite(M5_LED, HIGH);
     }
 
     delay(500);
