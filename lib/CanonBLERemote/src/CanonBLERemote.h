@@ -65,6 +65,7 @@ public:
     bool pair(unsigned int scan_duration);
     bool isConnected();
 
+    bool forceCameraConnection();
     bool trigger();
     bool focus();
 

@@ -6,29 +6,34 @@
 class TimeLapse {
     public :
         //constructor
-        //IN/ inter_min : lower delay between shots (in ms): requiered time to reconnect to the cam
+        //IN/ inter_min : default delay between shots (in ms)
         //IN/ trigger : function taking shot
-        TimeLapse(long inter_min);
-        //trigger each #Interval ms
-        bool TimeLapse_Trigger();
-        //increase #Interval
+        TimeLapse();
+        TimeLapse(long default_interval);
+        void set_callbacks(void (*_func_trigger)());
+
+        //trigger each #interval ms
+        void TimeLapse_Update();
+        //increase #interval
         void TimeLapse_incDelay();
-        //decrease #Interval (> #_MIN_Interval)
+        //decrease #interval (> #_MIN_Interval)
         void TimeLapse_decDelay();
-        void Launch();
-        void Stop();
         bool Recording_OnOFF();
         long get_interval();
+        bool is_recording();
 
-        unsigned int Pic_count = 0;
     private :
         bool timeLapse_ON;
-        long Interval = 0; //ms
+        long interval = 0; //ms
 
-        void(*_func_trigger)();
-        long _time_last_trigger = 0; //ms
-        long _MIN_Interval; //ms
+        void(*func_trigger)();
+
+        long _time_next_trigger = 0; //ms
+        long _MIN_Interval = 600; //ms
         const long _delay_increment = 100; //ms
+
+        void Launch();
+        void Stop();
 };
 
 #endif

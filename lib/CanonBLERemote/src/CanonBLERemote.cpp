@@ -257,6 +257,19 @@ bool CanonBLERemote::isConnected()
     return pconnection_state->isConnected();
 }
 
+bool CanonBLERemote::forceCameraConnection()
+{
+    if (!isConnected())
+    {
+        if (!connect())
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 /** Trigger Camera 
  *  If the camera is in photo mode, it will take a single picture.
  *  If the camera is in movie mode, it will start/stop movie recording. 
@@ -290,9 +303,9 @@ bool CanonBLERemote::focus()
             return false;
         }
     }
-    byte cmdByte[] = {MODE_IMMEDIATE | BUTTON_FOCUS};                    // Binary OR : Concatenate Mode and Button
-    pRemoteCharacteristic_Trigger->writeValue(cmdByte, sizeof(cmdByte)); // Set the characteristic's value to be the array of bytes that is actually a string.
+    byte cmdByte = {MODE_IMMEDIATE | BUTTON_FOCUS};                    // Binary OR : Concatenate Mode and Button
+    pRemoteCharacteristic_Trigger->writeValue(cmdByte, false); // Set the characteristic's value to be the array of bytes that is actually a string.
     delay(200);
-    pRemoteCharacteristic_Trigger->writeValue(MODE_IMMEDIATE, sizeof(MODE_IMMEDIATE));
+    pRemoteCharacteristic_Trigger->writeValue(MODE_IMMEDIATE, false);
     return true;
 }

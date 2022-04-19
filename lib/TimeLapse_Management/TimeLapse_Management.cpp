@@ -1,54 +1,55 @@
 #include "TimeLapse_Management.h"
 
-TimeLapse::TimeLapse(long inter_min)
+TimeLapse::TimeLapse()
 {
     timeLapse_ON = false;
-    _MIN_Interval = inter_min;
+    interval = _MIN_Interval;
 }
 
-bool TimeLapse::TimeLapse_Trigger()
+TimeLapse::TimeLapse(long default_interval)
 {
-    if (timeLapse_ON and ((millis() - _time_last_trigger) > Interval)){
-        Pic_count += 1;
-        _time_last_trigger = millis();
-        return true;
+    timeLapse_ON = false;
+    if(default_interval < _MIN_Interval)
+    {
+        interval = _MIN_Interval;
+    } 
+    else 
+    {
+        interval = default_interval;
     }
-    else{
-        return false;
+    
+}
+
+void TimeLapse::set_callbacks(void (*_func_trigger)())
+{
+    this->func_trigger = _func_trigger;
+}
+
+void TimeLapse::TimeLapse_Update()
+{
+    if (timeLapse_ON && (millis() > _time_next_trigger)){
+        _time_next_trigger = millis() + interval;
+       
+       func_trigger();
     }
 }
 
 void TimeLapse::TimeLapse_incDelay()
 {
-    if (Interval < _MIN_Interval)
-    {
-        Interval = _MIN_Interval;
-    }
-    else
-    {
-        Interval += _delay_increment;
-    }
+    interval += _delay_increment;
 }
 
 void TimeLapse::TimeLapse_decDelay()
 {
-    if (Interval - _delay_increment < _MIN_Interval)
+    if (interval - _delay_increment >= _MIN_Interval)
     {
-        Interval = 0;
-    }
-    else
-    {
-        Interval -= _delay_increment;
+        interval -= _delay_increment;
     }
 }
 
 void TimeLapse::Launch()
 {
-    if (Interval >= _MIN_Interval)
-    {
-        timeLapse_ON = true;
-        Pic_count = 0;
-    }
+    timeLapse_ON = true;
 }
 
 void TimeLapse::Stop()
@@ -70,7 +71,12 @@ bool TimeLapse::Recording_OnOFF()
     }
 }
 
+bool TimeLapse::is_recording()
+{
+    return timeLapse_ON;
+}
+
 long TimeLapse::get_interval()
 {
-    return Interval;
+    return interval;
 }
