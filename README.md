@@ -6,7 +6,7 @@ This Bluetooth remote aims to replicate Canon's BR-E1 behavior while adding key 
 
 Besides I added a custom remote where you can change the timer, the number of shots taken and the interval between each shot. This feature is implemented in lower end cameras (as custom remote) but absent from the higher ends cameras (like R5, R6).
 
-![canon custom remote](https://github.com/combatistor/BR-M5-custom/blob/master/img/canon_remote.jpg?raw=true)
+<img src="https://github.com/combatistor/BR-M5-custom/blob/master/img/canon_remote.jpg" alt="canon custom remote" height="200"/>
 
 Fortunately, *M5Stack* proposes a nice little inexpensive development board that perfectly fits our needs, the [M5Stick-Cplus](https://m5stack.com/products/m5stickc-plus-esp32-pico-mini-iot-development-kit?variant=35275856609444).
 
@@ -15,7 +15,7 @@ The BR-M5 has been primarily developed for the Canon M50 Mark I, which misses a 
 I followed up the new custom remote on my canon EOS R6 and it works perfectly!  
 I added beeping sound and LED blinking to have an indication of the remaining time as it will not blink on the camera.
 
-![custom remote shooting](https://github.com/combatistor/BR-M5-custom/blob/master/img/remote_shooting.jpg?raw=true)
+<img src="https://github.com/combatistor/BR-M5-custom/blob/master/img/remote_shooting.jpg" alt="custom remote shooting" width="100"/>
 
 ## Installation
 
@@ -34,7 +34,7 @@ you can comment/uncomment the lines
 
 You can always change the mode by pressing 2 times rapidly on the right-side button, then pressing on the right-side button to select the mode and validate using the center button
 
-![custom remote mode](https://github.com/combatistor/BR-M5-custom/blob/master/img/remote_mode.jpg?raw=true)
+<img src="https://github.com/combatistor/BR-M5-custom/blob/master/img/remote_mode.jpg" alt="custom remote mode" width="100"/>
 
 ### Timelapse mode
 * To change the interval, press the right-side button for half a second and use the same button to increase and the center button to decrease the timelapse interval. Once set, press the center button for half a second to validate.
@@ -43,9 +43,9 @@ You can always change the mode by pressing 2 times rapidly on the right-side but
 ### Custom remote mode
 * To change the settings, press the right-side button for half a second and use the same button to increase and the center button to decrease the timelapse interval.  
 To change the other settings, press the right-side button for half a second again and it should change which setting you are modifying. Once set, press the center button for half a second to validate.  
-![custom remote settings](https://github.com/combatistor/BR-M5-custom/blob/master/img/remote_mode.jpg?raw=true)
+<img src="https://github.com/combatistor/BR-M5-custom/blob/master/img/remote_settings.jpg" alt="custom remote settings" width="100"/>
 * Start and/or stop the shooting using the center button.  
-![custom remote ready](https://github.com/combatistor/BR-M5-custom/blob/master/img/remote_mode.jpg?raw=true)
+<img src="https://github.com/combatistor/BR-M5-custom/blob/master/img/remote_ready.jpg" alt="custom remote ready" width="100"/>
 
 ## To-do
 
