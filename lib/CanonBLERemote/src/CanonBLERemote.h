@@ -56,13 +56,14 @@ private:
     String device_name = "";
     void scan(unsigned int  scan_duration);
     bool connect();
-    void disconnect();
+    // void disconnect();
 
 
 public:
     CanonBLERemote(String name);
     void init();
     bool pair(unsigned int scan_duration);
+    void disconnect();
     bool isConnected();
 
     bool forceCameraConnection();
