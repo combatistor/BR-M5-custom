@@ -1,9 +1,11 @@
 #include "TimeLapse_Management.h"
 
+long TimeLapse::DEFAULT_INTERVAL = 1000;
+
 TimeLapse::TimeLapse()
 {
     timeLapse_ON = false;
-    interval = _MIN_Interval;
+    interval = DEFAULT_INTERVAL;
 }
 
 TimeLapse::TimeLapse(long default_interval)

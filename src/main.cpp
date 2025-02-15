@@ -7,7 +7,7 @@
 #include "TimeLapse_Management.h"
 #include "Remote_Management.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 #include "esp_log.h"
 #include <esp32-hal-log.h>
 
@@ -18,7 +18,7 @@ Display M5_display(&M5.Lcd, name_remote);
 
 Ticker blinker;
 
-TimeLapse timelapse(600);
+TimeLapse timelapse;
 Remote remote;
 LED led;
 bool check_button_state = true;
@@ -39,7 +39,7 @@ enum Pages
     Settings_mode,
     Settings_remote,
     Settings_timelapse,
-    Sleep,
+    Waiting,
     Disconnecting,
     Reconnecting,
 } current_page;
@@ -160,7 +160,7 @@ void loop()
     if(current_shooting_mode != Shooting_timelapse && 
         canon_ble.isConnected() && millis() > m_sleep_count && !disconnecting) // going to sleep mode to release camera and remote
     {
-        Serial.println("Going to sleep, disconnecting camera...");
+        log_v("Going to sleep, disconnecting camera...");
         disconnecting = true;
         current_page = Disconnecting; //using current page will lock other interactions
         canon_ble.disconnect();
@@ -171,9 +171,9 @@ void loop()
     case Disconnecting:
         if(!canon_ble.isConnected())
         {
-            Serial.println("Camera disconnected!, change screen");
-            // M5.Axp.ScreenBreath(8);
-            current_page = Sleep;
+            log_v("Camera disconnected!, change screen");
+            M5.Axp.ScreenBreath(Display::LOW_BRIGHTNESS);
+            current_page = Waiting;
             disconnecting = false;
             M5_display.set_init_screen(2);
         }
@@ -182,19 +182,19 @@ void loop()
     case Reconnecting: 
         if(canon_ble.isConnected())
         {
-            Serial.println("Camera reconnected!");
+            log_v("Camera reconnected!");
             current_page = Shooting;
             set_current_mode_display();
 
             // canon_ble.trigger();
-            // M5.Axp.ScreenBreath(9);
+            M5.Axp.ScreenBreath(Display::BRIGHTNESS);
         }
     break;
 
-    case Sleep:
+    case Waiting:
         if(btnAPressed || btnBPressed)
         {
-            Serial.println("Reconnecting camera... change screen");
+            log_v("Reconnecting camera... change screen");
             M5_display.set_init_screen(1);
 
             canon_ble.forceCameraConnection(); // to wake up the camera from sleep
@@ -358,7 +358,7 @@ void loop()
 
                 if (btnALongPress)
                 {
-                    Serial.println("focus...");
+                    log_v("focusing...");
                     canon_ble.focus();
                     break;
                 }
@@ -378,12 +378,12 @@ void loop()
                 {
                     if (remote.Start_OnOFF())
                     {
-                        Serial.println("Start remote");
+                        log_v("Start remote");
                         M5_display.set_remote_menu_screen(remote.get_delay(), remote.get_shots(), remote.get_interval(), "Shooting", -1);
                     }
                     else
                     {
-                        Serial.println("Stop remote");
+                        log_v("Stop remote");
                         M5_display.set_remote_menu_screen(remote.get_delay(), remote.get_shots(), remote.get_interval(), "Ready", -1);
                     }
                 
@@ -403,7 +403,7 @@ void loop()
 
                 if (btnALongPress)
                 {
-                    Serial.println("focus...");
+                    log_v("focusing...");
                     canon_ble.focus();
                     break;
                 }
@@ -427,12 +427,12 @@ void loop()
                     {
                         if (timelapse.Recording_OnOFF())
                         {
-                            Serial.println("Start timelapse");
+                            log_v("Start timelapse");
                             M5_display.set_timelapse_menu_screen(timelapse.get_interval(), "Shooting timelapse");
                         }
                         else
                         {
-                            Serial.println("Stop timelapse");
+                            log_v("Stop timelapse");
                             M5_display.set_timelapse_menu_screen(timelapse.get_interval(), "Ready for timelapse");
                         }
                     }
@@ -468,8 +468,10 @@ void loop()
 
 int8_t getBatteryLevel(void)
 {
-    double bat_charge_p = 100 * ((M5.Axp.GetBatVoltage() - 3.0) / 1.16); // 1.07, 1.1, 1.2...  may need more tuning
-    Serial.println(bat_charge_p);
+    //double bat_charge_p = 100 * ((M5.Axp.GetBatVoltage() - 3.0) / 1.16); // 1.07, 1.1, 1.2...  may need more tuning
+    double bat_charge_p = ((M5.Axp.GetBatVoltage() - 3.27) / (4.2-3.27)) * 100;
+    
+    log_v("Batt level: %.3f", bat_charge_p);
 
     if(bat_charge_p > 100)
     {
@@ -513,7 +515,9 @@ void setup()
 
     int do_pair = M5.BtnA.isPressed() ? 0 : 1;
 
-    M5.Axp.ScreenBreath(9);
+    log_v("do pair %d", do_pair);
+
+    M5.Axp.ScreenBreath(Display::BRIGHTNESS);
     delay(100);
     M5_display.set_init_screen(do_pair);
 
@@ -534,7 +538,7 @@ void setup()
         // After paired, the pair() function should not be called.
         do
         {
-            Serial.println("Pairing...");
+            log_v("Pairing...");
         } while (!canon_ble.pair(10));
 
         blinker.detach();
@@ -542,11 +546,11 @@ void setup()
     }
 
     delay(500);
-    Serial.println("Setup Done");
+    log_v("Setup Done");
 
     do
     {
-        Serial.println("Waiting for camera...");
+        log_v("Waiting for camera...");
     } while (!canon_ble.forceCameraConnection());
 
     M5_display.set_address(canon_ble.getPairedAddressString());

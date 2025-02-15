@@ -9,7 +9,7 @@ extern const unsigned char icon_ble[4608];
 class Display
 {
 private:
-    TFT_eSprite buffer;
+    TFT_eSprite display_buffer;
     String name;
     String address;
     int8_t m_battery_perc = -1;
@@ -27,7 +27,11 @@ private:
     void drawBatteryIcon();
     
 public :
-    Display(M5Display* tft, String name_remote);
+    Display(M5Display* lcd, String name_remote);
+
+    static int BRIGHTNESS;
+    static int LOW_BRIGHTNESS;
+
     void set_address(String ext_address);
     void setBatteryInfos(int8_t _battery_perc, bool charging);
 

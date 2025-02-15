@@ -5,6 +5,7 @@
 
 class TimeLapse {
     public :
+        static long DEFAULT_INTERVAL;
         //constructor
         //IN/ inter_min : default delay between shots (in ms)
         //IN/ trigger : function taking shot

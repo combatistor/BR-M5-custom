@@ -13,7 +13,7 @@ void LED::on() {
 
 void LED::on(uint16_t duration) {
   digitalWrite(M5_LED, LOW);
-  Serial.println("LED ON");
+  log_v("LED ON");
 
   if(duration == 0) // infinite
   {
@@ -45,7 +45,7 @@ void LED::setRepeat(bool repeat, uint16_t pause) {
 
 void LED::off() {
   digitalWrite(M5_LED, HIGH);
-  Serial.println("LED OFF");
+  log_v("LED OFF");
 
   if(_repeat){
     _pause_count = millis() + _pause_duration;

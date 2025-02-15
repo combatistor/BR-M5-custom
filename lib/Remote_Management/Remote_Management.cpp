@@ -38,7 +38,7 @@ void Remote::Remote_Update()
                 {
                     t_125 = millis() + 125;
 
-                    Serial.println("QUICK BEEP");
+                    log_v("QUICK BEEP");
                     func_beep(50);   
                 }
             }  
@@ -48,7 +48,7 @@ void Remote::Remote_Update()
                 {
                     t_500 = millis() + 500; 
 
-                    Serial.println("BEEP");
+                    log_v("BEEP");
                     func_beep(200);
                 }     
 
@@ -58,14 +58,13 @@ void Remote::Remote_Update()
             {
                 if(remaining_delay > 0)
                 {
-                    Serial.println("Remaining seconds:");
-                    Serial.println(remaining_delay);
+                   log_d("Remaining seconds: %d", remaining_delay);
 
                     t_1000 = millis() + 1000;
 
                     remaining_delay--;
                 } else {
-                    Serial.println("Start Shots logic");
+                    log_i("Start Shots logic");
 
                     start_trigger();
                 }
@@ -77,7 +76,7 @@ void Remote::Remote_Update()
     {
         if(Shots == 1) // No need to apply any interval
         {
-            Serial.println("TRIGGER!");
+            log_v("TRIGGER!");
             func_trigger();
             started_shots = false;
 
@@ -89,17 +88,16 @@ void Remote::Remote_Update()
             {
                 if(remaining_shots > 0)
                 {
-                    Serial.println("Remaining shots:");
-                    Serial.println(remaining_shots);
+                    log_d("Remaining shots: %d", remaining_shots);
 
                     time_next_trigger = millis() + Interval;
 
                     remaining_shots--;
 
-                    Serial.println("TRIGGER!");
+                    log_v("TRIGGER!");
                     func_trigger();
                 } else {
-                    Serial.println("Stop shots logic");
+                    log_i("Stop shots logic");
 
                     started_shots = false;
 
@@ -114,7 +112,7 @@ void Remote::start_trigger()
 {
     started_countdown = false;
     
-    Serial.println("START SHOTS");
+    log_i("START SHOTS");
     started_shots = true;
 }
 

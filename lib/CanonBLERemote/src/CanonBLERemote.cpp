@@ -26,13 +26,13 @@ void advdCallback::onResult(BLEAdvertisedDevice advertisedDevice)
 
 void ConnectivityState::onConnect(BLEClient *pclient)
 {
-    // Serial.println("Device is connected");
+    log_v("Device is connected");
     connected = true;
 }
 
 void ConnectivityState::onDisconnect(BLEClient *pclient)
 {
-    // Serial.println("Device disconnnect");
+    log_v("Device disconnnect");
     connected = false;
 }
 
@@ -97,12 +97,12 @@ void CanonBLERemote::init()
 
         if (address.length() == 17)
         {
-            // Serial.printf("Paired camera address: %s\n", address.c_str());
+            log_i("Paired camera address: %s", address.c_str());
             camera_address = BLEAddress(address.c_str());
         }
         else
         {
-            // Serial.println("No camera has been paired yet.");
+            log_i("No camera has been paired yet.");
         }
     }
     else
@@ -116,7 +116,7 @@ void CanonBLERemote::init()
 void CanonBLERemote::scan(unsigned int scan_duration)
 {
 
-    log_i("Start BLE scan");
+    log_v("Start BLE scan");
     BLEScan *pBLEScan = BLEDevice::getScan();
     advdCallback *advert_dev_callback = new advdCallback(SERVICE_UUID, &ready_to_connect, &camera_address);
 
@@ -147,7 +147,7 @@ String CanonBLERemote::getPairedAddressString()
 bool CanonBLERemote::pair(unsigned int scan_duration)
 {
     BLEDevice::setEncryptionLevel(ESP_BLE_SEC_ENCRYPT_MITM);
-    log_i("Scanning for camera...");
+    log_v("Scanning for camera...");
     scan(scan_duration);
     unsigned long start_ms = millis();
     while (!ready_to_connect && millis() - start_ms < scan_duration * 1000)
@@ -156,17 +156,16 @@ bool CanonBLERemote::pair(unsigned int scan_duration)
 
     if (ready_to_connect)
     {
-        log_i("Canon device found");
-        // Serial.println(camera_address.toString().c_str());
+        log_d("Canon device found %s", camera_address.toString().c_str());
     }
     else
     {
-        log_i("Camera not found");
+        log_d("Camera not found");
         return false;
     }
 
     // Pair camera
-    log_i("Pairing..");
+    log_v("Pairing..");
     if (pclient->connect(camera_address))
     {
         // Acquire reference to main service
@@ -183,7 +182,7 @@ bool CanonBLERemote::pair(unsigned int scan_duration)
                 device_name_.getBytes(cmdPress, device_name_.length()); // message Parser
                 cmdPress[0] = {0x03};
                 pRemoteCharacteristic_Pairing->writeValue(cmdPress, sizeof(cmdPress), false); // Writing to Canon_pairing_service
-                log_e("Camera paring success");
+                log_d("Camera paring success");
                 delay(200);
                 disconnect();
                 BLEDevice::setEncryptionLevel(ESP_BLE_SEC_ENCRYPT_NO_MITM);
@@ -229,7 +228,7 @@ bool CanonBLERemote::connect()
             pRemoteCharacteristic_Trigger = pRemoteService->getCharacteristic(SHUTTER_CONTROL_SERVICE);
             if (pRemoteCharacteristic_Trigger != nullptr)
             {
-                log_i("Camera connection Success");
+                log_d("Camera connection Success");
                 // disconnect();       // Disconnect remote from the camera every time after action, as the real canon remote did.
                 return true;
             }
@@ -303,9 +302,9 @@ bool CanonBLERemote::focus()
             return false;
         }
     }
-    byte cmdByte = {MODE_IMMEDIATE | BUTTON_FOCUS};                    // Binary OR : Concatenate Mode and Button
-    pRemoteCharacteristic_Trigger->writeValue(cmdByte, false); // Set the characteristic's value to be the array of bytes that is actually a string.
+    byte cmdByte[] = {MODE_IMMEDIATE | BUTTON_FOCUS};                    // Binary OR : Concatenate Mode and Button
+    pRemoteCharacteristic_Trigger->writeValue(cmdByte, sizeof(cmdByte)); // Set the characteristic's value to be the array of bytes that is actually a string.
     delay(200);
-    pRemoteCharacteristic_Trigger->writeValue(MODE_IMMEDIATE, false);
+    pRemoteCharacteristic_Trigger->writeValue(MODE_IMMEDIATE, sizeof(MODE_IMMEDIATE));
     return true;
 }
