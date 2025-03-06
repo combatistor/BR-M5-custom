@@ -1,40 +1,37 @@
-#ifndef TimeLapse_Management_h
-#define TimeLapse_Management_h
+#ifndef TIMELAPSE_MANAGEMENT_H_
+#define TIMELAPSE_MANAGEMENT_H_
 
 #include <Arduino.h>
 
-class TimeLapse {
-    public :
-        static long DEFAULT_INTERVAL;
-        //constructor
-        //IN/ inter_min : default delay between shots (in ms)
-        //IN/ trigger : function taking shot
-        TimeLapse();
-        TimeLapse(long default_interval);
-        void set_callbacks(void (*_func_trigger)());
+#include "Remote_Preferences.h"
 
-        //trigger each #interval ms
-        void TimeLapse_Update();
-        //increase #interval
-        void TimeLapse_incDelay();
-        //decrease #interval (> #_MIN_Interval)
-        void TimeLapse_decDelay();
-        bool Recording_OnOFF();
-        long get_interval();
-        bool is_recording();
+class TimeLapse
+{
 
-    private :
-        bool timeLapse_ON;
-        long interval = 0; //ms
+public:
+    TimeLapse(RemotePreferences *t_pPreferences, void (*t_pFuncTrigger)());
 
-        void(*func_trigger)();
+    void update();
+    void incDelay();
+    void decDelay();
+    bool recordingOnOFF();
 
-        long _time_next_trigger = 0; //ms
-        long _MIN_Interval = 600; //ms
-        const long _delay_increment = 100; //ms
+    unsigned long getInterval();
+    bool isRecording();
 
-        void Launch();
-        void Stop();
+private:
+    static constexpr unsigned long MIN_INTERVAL = 600;    // ms
+    static constexpr unsigned long DELAY_INCREMENT = 100; // ms
+
+    RemotePreferences *m_pPreferences;
+    bool m_timeLapseOn;
+    unsigned long m_interval = 0;        // ms
+    unsigned long m_timeNextTrigger = 0; // ms
+
+    void (*m_pFuncTrigger)();
+
+    void launch();
+    void stop();
 };
 
-#endif
+#endif // TIMELAPSE_MANAGEMENT_H_

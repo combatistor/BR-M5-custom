@@ -1,84 +1,74 @@
 #include "TimeLapse_Management.h"
 
-long TimeLapse::DEFAULT_INTERVAL = 1000;
+/* --------------------------------- Constructor -----------------------------------*/
 
-TimeLapse::TimeLapse()
+TimeLapse::TimeLapse(RemotePreferences *t_pPreferences, void (*t_pFuncTrigger)())
+    : m_pPreferences(t_pPreferences),
+      m_pFuncTrigger(t_pFuncTrigger),
+      m_timeLapseOn(false),
+      m_interval(t_pPreferences->getTimelapseInterval())
 {
-    timeLapse_ON = false;
-    interval = DEFAULT_INTERVAL;
 }
 
-TimeLapse::TimeLapse(long default_interval)
+/* --------------------------------- Public methods ---------------------------------*/
+
+void TimeLapse::update()
 {
-    timeLapse_ON = false;
-    if(default_interval < _MIN_Interval)
+    if (m_timeLapseOn && (millis() > m_timeNextTrigger))
     {
-        interval = _MIN_Interval;
-    } 
-    else 
-    {
-        interval = default_interval;
-    }
-    
-}
+        m_timeNextTrigger = millis() + m_interval;
 
-void TimeLapse::set_callbacks(void (*_func_trigger)())
-{
-    this->func_trigger = _func_trigger;
-}
-
-void TimeLapse::TimeLapse_Update()
-{
-    if (timeLapse_ON && (millis() > _time_next_trigger)){
-        _time_next_trigger = millis() + interval;
-       
-       func_trigger();
+        m_pFuncTrigger();
     }
 }
 
-void TimeLapse::TimeLapse_incDelay()
+void TimeLapse::incDelay()
 {
-    interval += _delay_increment;
+    m_interval += DELAY_INCREMENT;
+    m_pPreferences->setTimelapseInterval(m_interval);
 }
 
-void TimeLapse::TimeLapse_decDelay()
+void TimeLapse::decDelay()
 {
-    if (interval - _delay_increment >= _MIN_Interval)
+    if (m_interval - DELAY_INCREMENT >= MIN_INTERVAL)
     {
-        interval -= _delay_increment;
+        m_interval -= DELAY_INCREMENT;
     }
+    m_pPreferences->setTimelapseInterval(m_interval);
 }
 
-void TimeLapse::Launch()
+bool TimeLapse::recordingOnOFF()
 {
-    timeLapse_ON = true;
-}
-
-void TimeLapse::Stop()
-{
-    timeLapse_ON = false;
-}
-
-bool TimeLapse::Recording_OnOFF()
-{
-    if (timeLapse_ON)
+    if (m_timeLapseOn)
     {
-        Stop();
+        stop();
         return false;
     }
     else
     {
-        Launch();
+        launch();
         return true;
     }
 }
 
-bool TimeLapse::is_recording()
+bool TimeLapse::isRecording()
 {
-    return timeLapse_ON;
+    return m_timeLapseOn;
 }
 
-long TimeLapse::get_interval()
+unsigned long TimeLapse::getInterval()
 {
-    return interval;
+    return m_interval;
+}
+
+/* --------------------------------- Private methods ---------------------------------*/
+
+void TimeLapse::launch()
+{
+    m_timeLapseOn = true;
+}
+
+void TimeLapse::stop()
+{
+    m_timeLapseOn = false;
 }

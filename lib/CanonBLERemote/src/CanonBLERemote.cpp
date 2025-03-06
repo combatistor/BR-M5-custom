@@ -115,7 +115,6 @@ void CanonBLERemote::init()
 //           When found -> advdCallback::OnResult
 void CanonBLERemote::scan(unsigned int scan_duration)
 {
-
     log_v("Start BLE scan");
     BLEScan *pBLEScan = BLEDevice::getScan();
     advdCallback *advert_dev_callback = new advdCallback(SERVICE_UUID, &ready_to_connect, &camera_address);
@@ -285,10 +284,29 @@ bool CanonBLERemote::trigger()
         }
     }
 
-    byte cmdByte = {MODE_IMMEDIATE | BUTTON_RELEASE};          // Binary OR : Concatenate Mode and Button
+    uint8_t cmdByte = MODE_IMMEDIATE | BUTTON_RELEASE;          // Binary OR : Concatenate Mode and Button
     pRemoteCharacteristic_Trigger->writeValue(cmdByte, false); // Set the characteristic's value to be the array of bytes that is actually a string.
     delay(200);
     pRemoteCharacteristic_Trigger->writeValue(MODE_IMMEDIATE, false);
+    delay(50);
+    return true;
+}
+
+bool CanonBLERemote::trigger_video()
+{
+
+    if (!isConnected())
+    {
+        if (!connect())
+        {
+            return false;
+        }
+    }
+
+    uint8_t cmdByte = MODE_IMMEDIATE | BUTTON_RELEASE;          // Binary OR : Concatenate Mode and Button
+    pRemoteCharacteristic_Trigger->writeValue(cmdByte, false); // Set the characteristic's value to be the array of bytes that is actually a string.
+    delay(200);
+    pRemoteCharacteristic_Trigger->writeValue(MODE_MOVIE, false);
     delay(50);
     return true;
 }
@@ -302,9 +320,9 @@ bool CanonBLERemote::focus()
             return false;
         }
     }
-    byte cmdByte[] = {MODE_IMMEDIATE | BUTTON_FOCUS};                    // Binary OR : Concatenate Mode and Button
-    pRemoteCharacteristic_Trigger->writeValue(cmdByte, sizeof(cmdByte)); // Set the characteristic's value to be the array of bytes that is actually a string.
+    uint8_t cmdByte = MODE_IMMEDIATE | BUTTON_FOCUS;                    // Binary OR : Concatenate Mode and Button
+    pRemoteCharacteristic_Trigger->writeValue(cmdByte, false); // Set the characteristic's value to be the array of bytes that is actually a string.
     delay(200);
-    pRemoteCharacteristic_Trigger->writeValue(MODE_IMMEDIATE, sizeof(MODE_IMMEDIATE));
+    pRemoteCharacteristic_Trigger->writeValue(MODE_IMMEDIATE, false);
     return true;
 }

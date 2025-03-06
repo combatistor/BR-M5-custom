@@ -1,249 +1,438 @@
 #include "Display.h"
-#include <Arduino.h>
-#include "M5StickCPlus.h"
-#include "icon.c"
-#include <string>
 
-int Display::BRIGHTNESS = 50;
-int Display::LOW_BRIGHTNESS = 15;
+/* --------------------------------- Constructor -----------------------------------*/
 
-Display::Display(M5Display* lcd, String name_remote):
-    display_buffer(lcd),
-    name(name_remote)
+Display::Display(M5Display *t_pLcd, String t_nameRemote) : m_displayBuffer(t_pLcd),
+                                                           m_name(t_nameRemote)
 {
-    display_buffer.createSprite(M5.Lcd.width(), M5.Lcd.height());
-    display_buffer.setTextColor((negatif ? TFT_WHITE : TFT_BLACK));
-    display_buffer.setCursor(0, 0);
+    m_displayBuffer.createSprite(M5.Lcd.width(), M5.Lcd.height());
+    m_displayBuffer.setTextColor((m_negative ? TFT_WHITE : TFT_BLACK));
+    m_displayBuffer.setCursor(0, 0);
 }
 
-void Display::setBatteryInfos(int8_t battery_perc, bool charging)
-{
-    m_battery_perc = battery_perc;
-    m_charging = charging;
-}
+/* --------------------------------- Public methods ---------------------------------*/
 
-void Display::set_address(String address_str)
+void Display::setInitScreen(int t_state)
 {
-    address = address_str;
-    address.toUpperCase();
-}
-
-void Display::set_init_screen(int state)
-{
-    log_i("state %d", state);
-    last_rotation = 1;
+    log_i("state %d", t_state);
+    m_lastRotation = 1;
     M5.Lcd.setRotation(1);
 
-    display_buffer.deleteSprite();
-    display_buffer.createSprite(M5.Lcd.width(), M5.Lcd.height());
+    m_displayBuffer.deleteSprite();
+    m_displayBuffer.createSprite(M5.Lcd.width(), M5.Lcd.height());
 
-    display_buffer.fillRect(0, 0, M5.Lcd.width(), M5.Lcd.height(), (negatif ? TFT_BLACK : TFT_WHITE));
-    
-    display_buffer.setTextSize(2);
-    display_buffer.setFreeFont(font_name);
-    display_buffer.setTextDatum(0);
-    display_buffer.drawString(name, 120 - (display_buffer.textWidth(name)/2.0), 20 +  font_name->glyph->height); 
-    
+    m_displayBuffer.fillRect(0, 0, M5.Lcd.width(), M5.Lcd.height(),
+                             (m_negative ? TFT_BLACK : TFT_WHITE));
+
+    setTextAttributes(m_fontName, 2, 0);
+    m_displayBuffer.drawString(m_name, 120 - (m_displayBuffer.textWidth(m_name) / 2.0),
+                               20 + m_fontName->glyph->height);
+
     // buffer.setTextSize(1);
-    // buffer.setFreeFont(font_text);
-    // buffer.drawString("Pairing in progress", 120 - (buffer.textWidth("Pairing in progress") / 2.0), 95); 
-    if(state == 0){ // pairing
-        display_buffer.setTextSize(1);
-        display_buffer.setFreeFont(font_text);
-        display_buffer.drawString("Pairing in progress", 120 - (display_buffer.textWidth("Pairing in progress") / 2.0), 95); 
+    // buffer.setFreeFont(m_fontText);
+    // buffer.drawString("Pairing in progress", 120 - (buffer.textWidth("Pairing in progress") / 2.0), 95);
+    if (t_state == 0) // pairing
+    {
+        setTextAttributes(m_fontText, 1, 0);
+        m_displayBuffer.drawString("Pairing in progress",
+                                   120 - (m_displayBuffer.textWidth("Pairing in progress") / 2.0),
+                                   95);
     }
 
-    if(state == 1){ // waiting camera
-        display_buffer.setTextSize(1);
-        display_buffer.setFreeFont(font_text);
-        display_buffer.drawString("Waiting for camera", 120 - (display_buffer.textWidth("Waiting for camera") / 2.0), 95); 
+    if (t_state == 1) // waiting camera
+    {
+        setTextAttributes(m_fontText, 1, 0);
+        m_displayBuffer.drawString("Waiting for camera",
+                                   120 - (m_displayBuffer.textWidth("Waiting for camera") / 2.0),
+                                   95);
     }
 
-    if(state == 2){ // sleep mode
-        display_buffer.setTextSize(1);
-        display_buffer.setFreeFont(font_text);
-        display_buffer.drawString("Press a button...", 120 - (display_buffer.textWidth("Press a button...") / 2.0), 95); 
+    if (t_state == 2) // sleep mode
+    {
+        setTextAttributes(m_fontText, 1, 0);
+        m_displayBuffer.drawString("Press a button...",
+                                   120 - (m_displayBuffer.textWidth("Press a button...") / 2.0),
+                                   95);
     }
 
-    //display_buffer.setTextSize(2);
-    //display_buffer.setCursor(10, 70);
-    //display_buffer.printf("Waiting for connection");
-    display_buffer.pushSprite(0,0);
+    // m_displayBuffer.setTextSize(2);
+    // m_displayBuffer.setCursor(10, 70);
+    // m_displayBuffer.printf("Waiting for connection");
+    m_displayBuffer.pushSprite(0, 0);
 }
 
-void Display::set_settings_mode_screen(int mode) //0 for remote, 1 for timelapses
+void Display::setSettingsModeScreen(MainPrograms t_mode)
 {
-    if(last_rotation != 0) // have to rotate the display
+    if (m_lastRotation != 0) // have to rotate the display
     {
         M5.Lcd.setRotation(0);
 
-        display_buffer.deleteSprite();
-        display_buffer.createSprite(M5.Lcd.width(), M5.Lcd.height());
+        m_displayBuffer.deleteSprite();
+        m_displayBuffer.createSprite(M5.Lcd.width(), M5.Lcd.height());
 
-        last_rotation = 0;
+        m_lastRotation = 0;
         log_v("Rotated display");
     }
 
-    display_buffer.fillRect(0, 0, M5.Lcd.width(), M5.Lcd.height(), (negatif ? TFT_BLACK : TFT_WHITE));
+    m_displayBuffer.fillRect(0, 0, M5.Lcd.width(), M5.Lcd.height(),
+                             (m_negative ? TFT_BLACK : TFT_WHITE));
 
-    display_buffer.setFreeFont(font_text);
-    display_buffer.setTextSize(1);
-    display_buffer.setTextDatum(0);
+    drawHeader(true);
+    drawFooter(true, "mode");
 
-    display_buffer.drawString("Remote", 15, 50);
-    display_buffer.drawString("Timelapse", 15, 100);
+    setTextAttributes(m_fontText, 1, 0);
 
-    display_buffer.fillTriangle(0, (mode == 0) ? 50 : 100, 
-    8, (mode == 0) ? 58 : 108, 
-    0, (mode == 0) ? 66 : 116,
-    (negatif ? TFT_WHITE : TFT_BLACK));
+    m_displayBuffer.drawString("Remote", 15, 60);
+    m_displayBuffer.drawString("Timelapse", 15, 110);
+    m_displayBuffer.drawString("Preferences", 15, 160);
 
+    switch (t_mode)
+    {
+    case MainPrograms::REMOTE:
+        m_displayBuffer.fillTriangle(0, 60,
+                                     8, 68,
+                                     0, 76,
+                                     (m_negative ? TFT_WHITE : TFT_BLACK));
+        break;
 
-    display_buffer.setTextDatum(1);
-    display_buffer.drawString("mode", M5.Lcd.width() / 2, M5.Lcd.height() - 23);
-    display_buffer.drawLine(0, M5.Lcd.height() - 28, M5.Lcd.width(), M5.Lcd.height() - 28, (negatif ? TFT_WHITE : TFT_BLACK));
+    case MainPrograms::TIMELAPSE:
+        m_displayBuffer.fillTriangle(0, 110,
+                                     8, 118,
+                                     0, 126,
+                                     (m_negative ? TFT_WHITE : TFT_BLACK));
+        break;
 
-    display_buffer.pushSprite(0,0);
+    case MainPrograms::PREFERENCES:
+        m_displayBuffer.fillTriangle(0, 160,
+                                     8, 168,
+                                     0, 176,
+                                     (m_negative ? TFT_WHITE : TFT_BLACK));
+        break;
+    }
+
+    m_displayBuffer.pushSprite(0, 0);
 }
 
-void Display::set_timelapse_menu_screen(int delay, String status)
+void Display::setTimelapseMenuScreen(int t_delay, String t_status)
 {
-    log_i("set_timelapse_menu_screen, status: %s", status.c_str());
+    log_i("status: %s", t_status.c_str());
 
-    if(last_rotation != 1)
+    if (m_lastRotation != 1)
     {
         M5.Lcd.setRotation(1);
 
-        display_buffer.deleteSprite();
-        display_buffer.createSprite(M5.Lcd.width(), M5.Lcd.height());
+        m_displayBuffer.deleteSprite();
+        m_displayBuffer.createSprite(M5.Lcd.width(), M5.Lcd.height());
 
-        last_rotation = 1;
+        m_lastRotation = 1;
         log_v("Rotated display");
     }
 
-    display_buffer.fillRect(0, 0, M5.Lcd.width(), M5.Lcd.height(), (negatif ? TFT_BLACK : TFT_WHITE));
+    m_displayBuffer.fillRect(0, 0, M5.Lcd.width(), M5.Lcd.height(),
+                             (m_negative ? TFT_BLACK : TFT_WHITE));
 
-    display_buffer.setFreeFont(font_text);
-    display_buffer.setTextSize(1);
-    display_buffer.setTextDatum(0);
-    display_buffer.drawString(address, 120 - (display_buffer.textWidth(address)/2.0), 5);
-    display_buffer.drawLine(0, 28, M5.Lcd.width(), 28, (negatif ? TFT_WHITE : TFT_BLACK));
-    display_buffer.drawString(status, 120 - (display_buffer.textWidth(status)/2.0), 112);
-    display_buffer.drawLine(0, 107, M5.Lcd.width(), 107, (negatif ? TFT_WHITE : TFT_BLACK));
+    drawHeader(false);
+    drawFooter(false, t_status);
 
-    display_buffer.drawString("Interval (secs):", 30, 35);
-    display_buffer.setFreeFont(font_titles_24);
-    display_buffer.drawFloat(float(delay)/1000.0, 1, 30, 60);
+    setTextAttributes(m_fontText, 1, 0);
 
-    display_buffer.pushSprite(0,0);
-    display_buffer.endWrite();
+    m_displayBuffer.drawString("Interval (secs):", 30, 35);
+    m_displayBuffer.setFreeFont(m_fontTitles24);
+    m_displayBuffer.drawFloat(static_cast<float>(t_delay) / 1000.0, 1, 30, 60);
+
+    m_displayBuffer.pushSprite(0, 0);
 }
 
-void Display::set_remote_menu_screen(int delay, int shots, int interval, String status, int setting_mode) // setting: -1 -> no setting, 0 -> Delay, 1 -> Shots, 2 -> Interval
+void Display::setRemoteMenuScreen(int t_delay, int t_shots, unsigned long t_interval, String t_status)
 {
-    log_i("setting: %d", setting_mode);
+    log_i("remote screen");
 
-    if(last_rotation != 0)
+    if (m_lastRotation != 0)
     {
         M5.Lcd.setRotation(0);
 
-        display_buffer.deleteSprite();
-        display_buffer.createSprite(M5.Lcd.width(), M5.Lcd.height());
+        m_displayBuffer.deleteSprite();
+        m_displayBuffer.createSprite(M5.Lcd.width(), M5.Lcd.height());
 
-        last_rotation = 0;
+        m_lastRotation = 0;
         log_v("Rotated display");
     }
 
-    display_buffer.fillRect(0, 0, M5.Lcd.width(), M5.Lcd.height(), (negatif ? TFT_BLACK : TFT_WHITE));
+    m_displayBuffer.fillRect(0, 0, M5.Lcd.width(), M5.Lcd.height(),
+                             (m_negative ? TFT_BLACK : TFT_WHITE));
 
-    display_buffer.drawLine(0, 28, M5.Lcd.width(), 28, (negatif ? TFT_WHITE : TFT_BLACK)); // top line
-    display_buffer.drawLine(0, M5.Lcd.height() - 28, M5.Lcd.width(), M5.Lcd.height() - 28, (negatif ? TFT_WHITE : TFT_BLACK)); // bottom line
+    drawHeader(true);
+    drawFooter(true, t_status);
 
-    display_buffer.setFreeFont(font_text);
-    display_buffer.setTextSize(1);
-    display_buffer.setTextDatum(1); // start from top center
+    drawDelay(t_delay);
+    drawShots(t_shots);
+    drawInterval(t_shots, t_interval);
 
-    display_buffer.drawString(status, M5.Lcd.width() / 2, M5.Lcd.height() - 23);
+    m_displayBuffer.pushSprite(0, 0);
+}
 
-    display_buffer.setTextDatum(0);
-    if(setting_mode == -1 || setting_mode == 0)
+void Display::setRemoteMenuSettings(int t_delay, int t_shots, unsigned long t_interval, RemoteSettingModes t_settingMode)
+{
+    log_i("setting: %d", t_settingMode);
+
+    if (m_lastRotation != 0)
     {
-        display_buffer.drawString("Delay", 5, 35);
+        M5.Lcd.setRotation(0);
+
+        m_displayBuffer.deleteSprite();
+        m_displayBuffer.createSprite(M5.Lcd.width(), M5.Lcd.height());
+
+        m_lastRotation = 0;
+        log_v("Rotated display");
     }
 
-    if(setting_mode == -1 || setting_mode == 1)
+    m_displayBuffer.fillRect(0, 0, M5.Lcd.width(), M5.Lcd.height(),
+                             (m_negative ? TFT_BLACK : TFT_WHITE));
+
+    drawHeader(true);
+    drawFooter(true, "Settings");
+
+    switch (t_settingMode)
     {
-        display_buffer.drawString("Shots", 5, 98);
+    case RemoteSettingModes::DELAY:
+        drawDelay(t_delay);
+        break;
+
+    case RemoteSettingModes::SHOTS:
+        drawShots(t_shots);
+        break;
+
+    case RemoteSettingModes::INTERVAL:
+        drawInterval(t_shots, t_interval);
+        break;
     }
 
-    if(setting_mode == -1 || setting_mode == 2)
+    m_displayBuffer.pushSprite(0, 0);
+}
+
+void Display::setPreferencesScreen(PreferenceModes t_mode, bool t_led, bool t_buzzer)
+{
+    log_i("preferences screen");
+
+    if (m_lastRotation != 0)
     {
-        display_buffer.drawString("Interval", 5, 155);
+        M5.Lcd.setRotation(0);
+
+        m_displayBuffer.deleteSprite();
+        m_displayBuffer.createSprite(M5.Lcd.width(), M5.Lcd.height());
+
+        m_lastRotation = 0;
+        log_v("Rotated display");
     }
 
-    display_buffer.setFreeFont(font_titles_18);
-    display_buffer.setTextSize(1);
-    display_buffer.setTextDatum(1);
-    if(setting_mode == -1 || setting_mode == 0)
+    m_displayBuffer.fillRect(0, 0, M5.Lcd.width(), M5.Lcd.height(),
+                             (m_negative ? TFT_BLACK : TFT_WHITE));
+
+    drawHeader(true);
+
+    setTextAttributes(m_fontText, 1, 0);
+
+    m_displayBuffer.drawString("Display", 15, 60);
+    m_displayBuffer.drawString("LED", 15, 110);
+    m_displayBuffer.drawString("Buzzer", 15, 160);
+
+    m_displayBuffer.drawRect(M5.Lcd.width() - 25, 64, 14, 15,
+                             (m_negative ? TFT_WHITE : TFT_BLACK));
+    m_displayBuffer.drawRect(M5.Lcd.width() - 25, 113, 14, 15,
+                             (m_negative ? TFT_WHITE : TFT_BLACK));
+    m_displayBuffer.drawRect(M5.Lcd.width() - 25, 163, 14, 15,
+                             (m_negative ? TFT_WHITE : TFT_BLACK));
+
+    if (m_negative)
     {
-        display_buffer.drawNumber(delay, M5.Lcd.width() / 2, 60);
+        m_displayBuffer.fillRect(M5.Lcd.width() - 25, 64, 14, 15,
+                                 (m_negative ? TFT_WHITE : TFT_BLACK));
     }
 
-    if(setting_mode == -1 || setting_mode == 1)
+    if (t_led)
     {
-        display_buffer.drawNumber(shots, M5.Lcd.width() / 2, 123);
+        m_displayBuffer.fillRect(M5.Lcd.width() - 25, 113, 14, 15,
+                                 (m_negative ? TFT_WHITE : TFT_BLACK));
     }
 
-    if(setting_mode == -1 || setting_mode == 2)
+    if (t_buzzer)
     {
-        if(shots == 1)
-        {
-            display_buffer.drawString("-", M5.Lcd.width() / 2, 180);
-        } 
-        else 
-        {
-            display_buffer.drawFloat(float(interval) / 1000.0, 1, M5.Lcd.width() / 2, 180);
-        }
+        m_displayBuffer.fillRect(M5.Lcd.width() - 25, 163, 14, 15,
+                                 (m_negative ? TFT_WHITE : TFT_BLACK));
     }
 
-    drawBatteryText();
+    switch (t_mode)
+    {
+    case PreferenceModes::DISPLAY_NEG:
+        m_displayBuffer.fillTriangle(0, 60,
+                                     8, 68,
+                                     0, 76,
+                                     (m_negative ? TFT_WHITE : TFT_BLACK));
+        break;
 
-    drawBatteryIcon();
+    case PreferenceModes::LED:
+        m_displayBuffer.fillTriangle(0, 110,
+                                     8, 118,
+                                     0, 126,
+                                     (m_negative ? TFT_WHITE : TFT_BLACK));
+        break;
 
-    display_buffer.pushSprite(0,0);
+    case PreferenceModes::BUZZER:
+        m_displayBuffer.fillTriangle(0, 160,
+                                     8, 168,
+                                     0, 176,
+                                     (m_negative ? TFT_WHITE : TFT_BLACK));
+        break;
+
+    default:
+        break;
+    }
+
+    m_displayBuffer.pushSprite(0, 0);
+}
+
+bool Display::toggleDisplay()
+{
+    m_negative = !m_negative;
+    return !m_negative;
+}
+
+void Display::setAddress(String t_extAddress)
+{
+    m_address = t_extAddress;
+    m_address.toUpperCase();
+}
+
+void Display::setBatteryInfos(int8_t t_batteryPerc, bool t_charging)
+{
+    m_batteryPerc = t_batteryPerc;
+    m_charging = t_charging;
+}
+
+/* --------------------------------- Private methods ---------------------------------*/
+
+void Display::drawHeader(bool t_vertical)
+{
+
+    if (t_vertical)
+    {
+        m_displayBuffer.drawLine(0, 28, M5.Lcd.width(), 28,
+                                 (m_negative ? TFT_WHITE : TFT_BLACK)); // top line
+
+        drawBatteryText();
+
+        drawBatteryIcon();
+    }
+    else
+    {
+        m_displayBuffer.drawLine(0, 28, M5.Lcd.width(), 28, (m_negative ? TFT_WHITE : TFT_BLACK));
+
+        setTextAttributes(m_fontText, 1, 0);
+        m_displayBuffer.drawString(m_address, 120 - (m_displayBuffer.textWidth(m_address) / 2.0), 5);
+    }
+}
+
+void Display::drawFooter(bool t_vertical, String t_status)
+{
+    if (t_vertical)
+    {
+        m_displayBuffer.drawLine(0, M5.Lcd.height() - 28, M5.Lcd.width(), M5.Lcd.height() - 28,
+                                 (m_negative ? TFT_WHITE : TFT_BLACK)); // bottom line
+
+        setTextAttributes(m_fontText, 1, 1);
+        m_displayBuffer.drawString(t_status, M5.Lcd.width() / 2, M5.Lcd.height() - 23);
+    }
+    else
+    {
+        m_displayBuffer.drawLine(0, 107, M5.Lcd.width(), 107, (m_negative ? TFT_WHITE : TFT_BLACK));
+
+        setTextAttributes(m_fontText, 1, 0);
+        m_displayBuffer.drawString(t_status, 120 - (m_displayBuffer.textWidth(t_status) / 2.0), 112);
+    }
+}
+
+void Display::drawDelay(int t_delay)
+{
+    setTextAttributes(m_fontText, 1, 0);
+
+    m_displayBuffer.drawString("Delay", 5, 35);
+
+    setTextAttributes(m_fontTitles18, 1, 1);
+
+    m_displayBuffer.drawNumber(t_delay, M5.Lcd.width() / 2, 60);
+}
+
+void Display::drawShots(int t_shots)
+{
+    setTextAttributes(m_fontText, 1, 0);
+
+    m_displayBuffer.drawString("Shots", 5, 98);
+
+    setTextAttributes(m_fontTitles18, 1, 1);
+
+    m_displayBuffer.drawNumber(t_shots, M5.Lcd.width() / 2, 123);
+}
+
+void Display::drawInterval(int t_shots, unsigned long t_interval)
+{
+    setTextAttributes(m_fontText, 1, 0);
+
+    m_displayBuffer.drawString("Interval", 5, 155);
+
+    setTextAttributes(m_fontTitles18, 1, 1);
+
+    if (t_shots == 1)
+    {
+        m_displayBuffer.drawString("-", M5.Lcd.width() / 2, 180);
+    }
+    else
+    {
+        m_displayBuffer.drawFloat(static_cast<float>(t_interval) / 1000.0, 1,
+                                  M5.Lcd.width() / 2, 180);
+    }
+}
+
+void Display::setTextAttributes(const GFXfont *t_pfont, uint8_t t_size, uint8_t t_datum)
+{
+    m_displayBuffer.setFreeFont(t_pfont);
+    m_displayBuffer.setTextColor((m_negative ? TFT_WHITE : TFT_BLACK));
+    m_displayBuffer.setTextSize(t_size);
+    m_displayBuffer.setTextDatum(t_datum);
 }
 
 void Display::drawBatteryText()
 {
     String batt_value = "--%";
-    if(m_battery_perc != -1)
+    if (m_batteryPerc != -1)
     {
-        batt_value = String(m_battery_perc) + "%";
+        batt_value = String(m_batteryPerc) + "%";
     }
 
-    display_buffer.setFreeFont(font_text_small);
-    display_buffer.setTextSize(1);
-    display_buffer.setTextDatum(2); // start from top right
+    m_displayBuffer.setFreeFont(m_fontTextSmall);
+    m_displayBuffer.setTextColor((m_negative ? TFT_WHITE : TFT_BLACK));
+    m_displayBuffer.setTextSize(1);
+    m_displayBuffer.setTextDatum(2); // start from top right
 
-    display_buffer.drawString(batt_value, M5.Lcd.width() - 5, 7);
+    m_displayBuffer.drawString(batt_value, M5.Lcd.width() - 5, 7);
 }
 
 void Display::drawBatteryIcon()
 {
-    if(m_charging){
+    if (m_charging)
+    {
         int32_t x = 74;
         int32_t y = 3;
 
-        display_buffer.fillTriangle(
-        x + 7, y + 0,
-        x + 0, y + 11,
-        x + 5, y + 11, 
-        (negatif ? TFT_WHITE : TFT_BLACK));
+        m_displayBuffer.fillTriangle(
+            x + 7, y + 0,
+            x + 0, y + 11,
+            x + 5, y + 11,
+            (m_negative ? TFT_WHITE : TFT_BLACK));
 
-        display_buffer.fillTriangle(
-        x + 5, y + 9, 
-        x + 10, y + 9,
-        x + 4, y + 20,
-        (negatif ? TFT_WHITE : TFT_BLACK));
-        }
+        m_displayBuffer.fillTriangle(
+            x + 5, y + 9,
+            x + 10, y + 9,
+            x + 4, y + 20,
+            (m_negative ? TFT_WHITE : TFT_BLACK));
+    }
 }

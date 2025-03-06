@@ -1,220 +1,235 @@
 #include "Remote_Management.h"
 
-Remote::Remote()
+/* --------------------------------- Constructor -----------------------------------*/
+
+Remote::Remote(RemotePreferences *t_pPreferences,
+               void (*t_pFuncBeep)(int), void (*t_pFuncTrigger)(), void (*t_pFuncFinished)())
+    : m_pPreferences(t_pPreferences),
+      m_pFuncBeep(t_pFuncBeep),
+      m_pFuncTrigger(t_pFuncTrigger),
+      m_pFuncFinished(t_pFuncFinished),
+      m_startedCountdown(false),
+      m_startedShots(false),
+      m_delay(t_pPreferences->getDelay()),
+      m_shots(t_pPreferences->getShots()),
+      m_interval(t_pPreferences->getInterval())
 {
-    started_countdown = false;
-    started_shots = false;
 }
 
-Remote::Remote(int delay, int shots, long interval)
-{
-    started_countdown = false;
-    started_shots = false;
+/* --------------------------------- Public methods ---------------------------------*/
 
-    this->Delay = delay;
-    this->Shots = shots;
-    this->Interval = interval;
-}
-
-void Remote::set_callbacks(void (*_func_beep)(int), void (*_func_trigger)(), void (*_func_finished)())
+void Remote::update()
 {
-    this->func_beep = _func_beep;
-    this->func_trigger = _func_trigger;
-    this->func_finished = _func_finished;
-}
-
-void Remote::Remote_Update()
-{
-    if (started_countdown){
-        if(Delay == 0) // bypass countdown
+    if (m_startedCountdown)
+    {
+        if (m_delay == 0) // bypass countdown
         {
-            start_trigger();
+            startTrigger();
         }
-        else       // apply countdown
+        else // apply countdown
         {
-            if(remaining_delay < 2)
+            if (m_remainingDelay < 2)
             {
-                if(millis() > t_125) // every 125ms
+                if (millis() > m_125) // every 125ms
                 {
-                    t_125 = millis() + 125;
+                    m_125 = millis() + 125;
 
                     log_v("QUICK BEEP");
-                    func_beep(50);   
+                    m_pFuncBeep(50);
                 }
-            }  
-            else 
+            }
+            else
             {
-                if(millis() > t_500) // every 500ms
+                if (millis() > m_500) // every 500ms
                 {
-                    t_500 = millis() + 500; 
+                    m_500 = millis() + 500;
 
                     log_v("BEEP");
-                    func_beep(200);
-                }     
-
+                    m_pFuncBeep(200);
+                }
             }
 
-            if(millis() > t_1000) // every second
+            if (millis() > m_1000) // every second
             {
-                if(remaining_delay > 0)
+                if (m_remainingDelay > 0)
                 {
-                   log_d("Remaining seconds: %d", remaining_delay);
+                    log_d("Remaining seconds: %d", m_remainingDelay);
 
-                    t_1000 = millis() + 1000;
+                    m_1000 = millis() + 1000;
 
-                    remaining_delay--;
-                } else {
+                    m_remainingDelay--;
+                }
+                else
+                {
                     log_i("Start Shots logic");
 
-                    start_trigger();
+                    startTrigger();
                 }
             }
         }
     }
 
-    if (started_shots)
+    if (m_startedShots)
     {
-        if(Shots == 1) // No need to apply any interval
+        if (m_shots == 1) // No need to apply any interval
         {
             log_v("TRIGGER!");
-            func_trigger();
-            started_shots = false;
+            m_pFuncTrigger();
+            m_startedShots = false;
 
-            func_finished();
+            m_pFuncFinished();
         }
-        else 
+        else
         {
-            if(millis() > time_next_trigger)
+            if (millis() > m_timeNextTrigger)
             {
-                if(remaining_shots > 0)
+                if (m_remainingShots > 0)
                 {
-                    log_d("Remaining shots: %d", remaining_shots);
+                    log_d("Remaining shots: %d", m_remainingShots);
 
-                    time_next_trigger = millis() + Interval;
+                    m_timeNextTrigger = millis() + m_interval;
 
-                    remaining_shots--;
+                    m_remainingShots--;
 
                     log_v("TRIGGER!");
-                    func_trigger();
-                } else {
+                    m_pFuncTrigger();
+                }
+                else
+                {
                     log_i("Stop shots logic");
 
-                    started_shots = false;
+                    m_startedShots = false;
 
-                    func_finished();
+                    m_pFuncFinished();
                 }
             }
         }
     }
 }
 
-void Remote::start_trigger()
+void Remote::incDelay()
 {
-    started_countdown = false;
-    
-    log_i("START SHOTS");
-    started_shots = true;
+    m_delay += DELAY_INCREMENT;
+    m_pPreferences->setDelay(m_delay);
 }
 
-void Remote::Remote_incDelay()
+void Remote::decDelay()
 {
-    Delay += _delay_increment;
-}
-
-void Remote::Remote_decDelay()
-{
-    if (Delay - _delay_increment < _MIN_Delay)
+    if (m_delay - DELAY_INCREMENT < MIN_DELAY)
     {
-        Delay = _MIN_Delay;
+        m_delay = MIN_DELAY;
     }
     else
     {
-        Delay -= _delay_increment;
+        m_delay -= DELAY_INCREMENT;
     }
+    m_pPreferences->setDelay(m_delay);
 }
 
-void Remote::Remote_incShots()
+void Remote::incShots()
 {
-    Shots += _shots_increment;
+    m_shots += SHOTS_INCREMENT;
+    m_pPreferences->setShots(m_shots);
 }
 
-void Remote::Remote_decShots()
+void Remote::decShots()
 {
-    if (Shots - _shots_increment < _MIN_Shots)
+    if (m_shots - SHOTS_INCREMENT < MIN_SHOTS)
     {
-        Shots = _MIN_Shots;
-    }
-    else
-    {
-        Shots -= _shots_increment;
-    }
-}
-
-void Remote::Remote_incInterval()
-{
-    Interval += _interval_increment;
-}
-
-void Remote::Remote_decInterval()
-{
-    if (Interval - _interval_increment < _MIN_Interval)
-    {
-        Interval = _MIN_Interval;
+        m_shots = MIN_SHOTS;
     }
     else
     {
-        Interval -= _interval_increment;
+        m_shots -= SHOTS_INCREMENT;
     }
+    m_pPreferences->setShots(m_shots);
 }
 
-void Remote::Launch()
+void Remote::incInterval()
 {
-    remaining_delay = Delay;
-    remaining_shots = Shots;
-   
-    started_countdown = true;
-    started_shots = false;
+    m_interval += INTERVAL_INCREMENT;
+    m_pPreferences->setInterval(m_interval);
 }
 
-void Remote::Stop()
+void Remote::decInterval()
 {
-    started_countdown = false;
-    started_shots = false;
-
-    remaining_delay = -1;
-    remaining_shots = -1;
-}
-
-bool Remote::Start_OnOFF()
-{
-    if (started_countdown || started_shots)
+    if (m_interval - INTERVAL_INCREMENT < MIN_INTERVAL)
     {
-        Stop();
+        m_interval = MIN_INTERVAL;
+    }
+    else
+    {
+        m_interval -= INTERVAL_INCREMENT;
+    }
+    m_pPreferences->setInterval(m_interval);
+}
+
+bool Remote::startOnOFF()
+{
+    if (m_startedCountdown || m_startedShots)
+    {
+        stop();
         return false;
     }
     else
     {
-        Launch();
+        launch();
         return true;
     }
 }
 
-bool Remote::is_started()
+void Remote::startNow()
 {
-    return started_countdown;
+    m_pFuncTrigger();
+    m_startedShots = true;
+
+    m_pFuncFinished();
 }
 
-long Remote::get_delay()
+bool Remote::isStarted()
 {
-    return Delay;
+    return m_startedCountdown;
 }
 
-long Remote::get_shots()
+int Remote::getDelay()
 {
-    return Shots;
+    return m_delay;
 }
 
-long Remote::get_interval()
+int Remote::getShots()
 {
-    return Interval;
+    return m_shots;
+}
+
+int Remote::getInterval()
+{
+    return m_interval;
+}
+
+/* --------------------------------- Private methods ---------------------------------*/
+
+void Remote::launch()
+{
+    m_remainingDelay = m_delay;
+    m_remainingShots = m_shots;
+
+    m_startedCountdown = true;
+    m_startedShots = false;
+}
+
+void Remote::stop()
+{
+    m_startedCountdown = false;
+    m_startedShots = false;
+
+    m_remainingDelay = -1;
+    m_remainingShots = -1;
+}
+
+void Remote::startTrigger()
+{
+    m_startedCountdown = false;
+
+    log_i("START SHOTS");
+    m_startedShots = true;
 }

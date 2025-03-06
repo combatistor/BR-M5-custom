@@ -1,60 +1,69 @@
-#ifndef Remote_Management_h
-#define Remote_Management_h
+#ifndef REMOTE_MANAGEMENT_H_
+#define REMOTE_MANAGEMENT_H_
 
 #include <Arduino.h>
 
-class Remote {
-    public :
-        //constructor
-        Remote();
-        Remote(int delay, int shots, long interval);
+#include "remote_preferences.h"
 
-        void set_callbacks(void (*_func_beep)(int), void (*_func_trigger)(), void (*_func_finished)());
-        
-        void Remote_Update();
-        void Remote_incDelay();
-        void Remote_decDelay();
-        void Remote_incShots();
-        void Remote_decShots();
-        void Remote_incInterval();
-        void Remote_decInterval();
-        long get_delay();
-        long get_shots();
-        long get_interval();
-        bool is_started();
-        bool Start_OnOFF();
+class Remote
+{
+public:
+    Remote(RemotePreferences *t_pPreferences,
+           void (*t_pFuncBeep)(int), void (*t_pFuncTrigger)(), void (*t_pFuncFinished)());
 
-    private :
-        bool started_countdown;
-        bool started_shots;
+    void update();
 
-        long remaining_delay = -1;
-        long remaining_shots = -1;
+    void incDelay();
+    void decDelay();
 
-        long Delay = 10; //ms
-        long Shots = 1; //ms
-        long Interval = 1000; //ms
+    void incShots();
+    void decShots();
 
-        void(*func_beep)(int);
-        void(*func_trigger)();
-        void (*func_finished)();
+    void incInterval();
+    void decInterval();
 
-        long t_125 = 0;
-        long t_500 = 0;
-        long t_1000 = 0;
-        long time_next_trigger = 0;
+    bool startOnOFF();
+    void startNow();
 
-        long _MIN_Delay = 0; //s
-        long _MIN_Shots = 1;
-        long _MIN_Interval = 600; //ms
-        const long _delay_increment = 1; //s
-        const long _shots_increment = 1;
-        const long _interval_increment = 100; //ms
+    bool isStarted();
 
-        void Launch();
-        void Stop();
+    int getDelay();
+    int getShots();
+    int getInterval();
 
-        void start_trigger();
+private:
+    static constexpr unsigned int MIN_DELAY = 0;  // s
+    static constexpr unsigned int MIN_SHOTS = 1;
+    static constexpr unsigned long MIN_INTERVAL = 600;  // ms
+
+    static constexpr unsigned int DELAY_INCREMENT = 1;  // s
+    static constexpr unsigned int SHOTS_INCREMENT = 1;
+    static constexpr unsigned long INTERVAL_INCREMENT = 100;  // ms
+
+    RemotePreferences *m_pPreferences;
+    bool m_startedCountdown;
+    bool m_startedShots;
+
+    int m_remainingDelay = -1;
+    int m_remainingShots = -1;
+
+    int m_delay;  // ms
+    int m_shots;
+    unsigned long m_interval;  // ms
+
+    void (*m_pFuncBeep)(int);
+    void (*m_pFuncTrigger)();
+    void (*m_pFuncFinished)();
+
+    unsigned long m_125 = 0;
+    unsigned long m_500 = 0;
+    unsigned long m_1000 = 0;
+    unsigned long m_timeNextTrigger = 0;
+
+    void launch();
+    void stop();
+
+    void startTrigger();
 };
 
-#endif
+#endif  // REMOTE_MANAGEMENT_H_

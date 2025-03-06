@@ -32,13 +32,13 @@ class CanonBLERemote
 {
 private:
     // Trigger options
-    const byte BUTTON_RELEASE = 0b10000000;
-    const byte BUTTON_FOCUS = 0b01000000;
-    const byte BUTTON_TELE = 0b00100000;
-    const byte BUTTON_WIDE = 0b00010000;
-    const byte MODE_IMMEDIATE = 0b00001100;
-    const byte MODE_DELAY = 0b00000100;
-    const byte MODE_MOVIE = 0b00001000;
+    const uint8_t BUTTON_RELEASE = 0b10000000;
+    const uint8_t BUTTON_FOCUS = 0b01000000;
+    const uint8_t BUTTON_TELE = 0b00100000;
+    const uint8_t BUTTON_WIDE = 0b00010000;
+    const uint8_t MODE_IMMEDIATE = 0b00001100;
+    const uint8_t MODE_DELAY = 0b00000100;
+    const uint8_t MODE_MOVIE = 0b00001000;
 
     const BLEUUID SERVICE_UUID;
     const BLEUUID PAIRING_SERVICE;
@@ -68,6 +68,7 @@ public:
 
     bool forceCameraConnection();
     bool trigger();
+    bool trigger_video();
     bool focus();
 
     BLEAddress getPairedAddress();

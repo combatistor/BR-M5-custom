@@ -1,25 +1,27 @@
-#ifndef _LED_H_
-#define _LED_H_
+#ifndef LED_H_
+#define LED_H_
 
-#include "Arduino.h"
+#include <Arduino.h>
 
-class LED {
-  public:
-    LED(void);
+class Led
+{
+public:
+    Led();
 
-    void off();
     void on();
-    void on(uint16_t duration);
-    void setDuration(uint16_t duration);
-    void setRepeat(bool repeat, uint16_t pause);
+    void on(unsigned long t_duration);
+    void off();
+    void setDuration(unsigned long t_duration);
+    void setRepeat(bool t_repeat, unsigned long t_pause);
     void update();
 
-  private:
-    uint32_t _count;
-    uint16_t _led_duration;
-    bool led_on;
-    bool _repeat;
-    uint32_t _pause_count;
-    uint16_t _pause_duration;
+private:
+    unsigned long m_count;
+    unsigned long m_ledDuration;
+    bool m_ledOn;
+    bool m_repeat;
+    unsigned long m_pauseCount;
+    unsigned long m_pauseDuration;
 };
-#endif
+
+#endif // LED_H_
